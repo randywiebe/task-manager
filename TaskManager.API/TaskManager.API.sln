@@ -1,9 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.12.35527.113 d17.12
+# Visual Studio Version 18
+VisualStudioVersion = 18.6.11819.183 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskManager.API", "TaskManager.API.csproj", "{771B7797-39CB-4EE1-ABB0-F40388B4F95C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FD94C26A-E9EB-4A71-89CD-9CC70C2831BE}"
+	ProjectSection(SolutionItems) = preProject
+		..\.editorconfig = ..\.editorconfig
+		..\Directory.Packages.props = ..\Directory.Packages.props
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskManager.API.Testing.Unit", "..\TaskManager.API.Testing.Unit\TaskManager.API.Testing.Unit.csproj", "{283CD01F-53BD-44D5-AC6D-D507DDDC3832}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,8 +23,15 @@ Global
 		{771B7797-39CB-4EE1-ABB0-F40388B4F95C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{771B7797-39CB-4EE1-ABB0-F40388B4F95C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{771B7797-39CB-4EE1-ABB0-F40388B4F95C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{283CD01F-53BD-44D5-AC6D-D507DDDC3832}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{283CD01F-53BD-44D5-AC6D-D507DDDC3832}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{283CD01F-53BD-44D5-AC6D-D507DDDC3832}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{283CD01F-53BD-44D5-AC6D-D507DDDC3832}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {184C741D-1A79-4909-89A1-93FE685CB61D}
 	EndGlobalSection
 EndGlobal
