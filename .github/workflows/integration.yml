@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-and-test:
@@ -20,7 +27,7 @@ jobs:
           dotnet-version: '10.x'
 
       - name: Restore packages
-        run: dotnet restore
+        run: dotnet restore TaskManager.API.sln
 
       - name: Build API project
         run: dotnet build TaskManager.API/TaskManager.API.csproj --no-restore --configuration Release
@@ -29,4 +36,4 @@ jobs:
         run: dotnet build TaskManager.API.Testing.Unit/TaskManager.API.Testing.Unit.csproj --no-restore --configuration Release
 
       - name: Run tests
-        run: dotnet test TaskManager.API.Testing.Unit/TaskManager.API.Testing.Unit.csproj --no-build --configuration Release --verbosity normal
+        run: dotnet test --project TaskManager.API.Testing.Unit/TaskManager.API.Testing.Unit.csproj --no-build --configuration Release --verbosity normal
