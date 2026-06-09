@@ -27,7 +27,7 @@ jobs:
           dotnet-version: '10.x'
 
       - name: Restore packages
-        run: dotnet restore TaskManager.API/TaskManager.API.sln
+        run: dotnet restore TaskManager.API.sln
 
       - name: Build API project
         run: dotnet build TaskManager.API/TaskManager.API.csproj --no-restore --configuration Release
