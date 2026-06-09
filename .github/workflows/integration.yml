@@ -36,4 +36,4 @@ jobs:
         run: dotnet build TaskManager.API.Testing.Unit/TaskManager.API.Testing.Unit.csproj --no-restore --configuration Release
 
       - name: Run tests
-        run: dotnet test TaskManager.API.Testing.Unit/TaskManager.API.Testing.Unit.csproj --no-build --configuration Release --verbosity normal
+        run: dotnet test --project TaskManager.API.Testing.Unit/TaskManager.API.Testing.Unit.csproj --no-build --configuration Release --verbosity normal
