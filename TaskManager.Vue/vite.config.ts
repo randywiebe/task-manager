@@ -17,4 +17,16 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  test:{
+    environment: 'jsdom',
+  },
+  server: {
+    proxy: {
+      '/lists': {
+        target: 'https://localhost:7299',
+        changeOrigin: true,
+        secure: false, // needed because your backend is on https with a local cert
+      }
+    }
+  }
 })

@@ -2,8 +2,8 @@
 {
     public class ToDoListDto
     {
-        public string Summary { get; private set; }
+        public string Summary { get; set; }
 
-        public ToDoTaskDto[] Tasks { get; private set; }
+        public ToDoTaskDto[] Tasks { get; set; }
     }
 }

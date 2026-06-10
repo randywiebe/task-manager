@@ -31,9 +31,9 @@ namespace TaskManager.API
             return group;
         }
 
-        public static async Task<Ok<ToDoList[]>> GetAllLists(ToDoListDbContext dbContext)
+        public static async Task<Ok<ToDoListSummaryResponseModel[]>> GetAllLists(ToDoListDbContext dbContext)
         {
-            var toDoLists = await dbContext.ToDoLists.ToArrayAsync();
+            var toDoLists = await dbContext.ToDoLists.Select(x => new ToDoListSummaryResponseModel(x)).ToArrayAsync();
             return TypedResults.Ok(toDoLists);
         }
 

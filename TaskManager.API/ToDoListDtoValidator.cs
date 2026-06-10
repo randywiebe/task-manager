@@ -8,14 +8,25 @@ namespace TaskManager.API
         {
             Dictionary<string, string[]> errors = new();
 
-            if (string.IsNullOrWhiteSpace(dto.Summary))
+            try
             {
-                errors.TryAdd("list.summary.errors", new[] { "Summary is empty" });
-            }
 
-            if (dto.Summary.Length > 50)
+                if (string.IsNullOrWhiteSpace(dto.Summary))
+                {
+                    errors.TryAdd("list.summary.errors", new[] { "Summary is empty" });
+                }
+
+                if (dto.Summary.Length > 50)
+                {
+                    errors.TryAdd("list.summary.errors", new[] { "Summary is too long" });
+                }
+            }
+            catch (Exception ex)
             {
-                errors.TryAdd("list.summary.errors", new[] { "Summary is too long" });
+                // log exception
+
+                // Add an error so the client knows something went wrong
+                errors.TryAdd("list.summary.errors", new[] { "Unable to save" });
             }
 
             return errors;
