@@ -1,4 +1,4 @@
-name: Integration
+name: .NET API Build and Tests
 
 on:
   push:
