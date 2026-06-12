@@ -11,6 +11,8 @@ namespace TaskManager.API
         {
             group.MapGet("/", GetAllLists);
             group.MapGet("/{id}", GetList);
+            group.MapGet("/{id}/tasks", GetListTasks);
+
             group.MapPost("/", CreateList)
                 .AddEndpointFilter(async (efiContext, next) =>
                 {
@@ -25,6 +27,22 @@ namespace TaskManager.API
 
                     return await next(efiContext);
                 });
+
+            group.MapPost("/{id}/tasks", CreateListTask)
+                .AddEndpointFilter(async (efiContext, next) =>
+                {
+                    var param = efiContext.GetArgument<ToDoTaskDto>(0);
+
+                    var validationErrors = ToDoTaskDtoValidator.IsValid(param);
+
+                    if (validationErrors.Any())
+                    {
+                        return Results.ValidationProblem(validationErrors);
+                    }
+
+                    return await next(efiContext);
+                });
+
             group.MapPut("/{id}", UpdateList);
             group.MapDelete("/{id}", DeleteList);
 
@@ -49,17 +67,59 @@ namespace TaskManager.API
             return TypedResults.NotFound();
         }
 
+        public static async Task<Results<Ok<ToDoTaskResponseModel[]>, NotFound>> GetListTasks(int id, ToDoListDbContext dbContext)        
+        {
+            var toDoList = (await dbContext.ToDoLists.Include(list => list.Tasks).ToListAsync()).FirstOrDefault(x => x.Id == id);
+
+            if (toDoList != null)
+            {
+                return TypedResults.Ok(toDoList.Tasks.Select(x => new ToDoTaskResponseModel(x)).ToArray());
+            }
+
+            return TypedResults.NotFound();
+        }
+
         public static async Task<Created<ToDoList>> CreateList(ToDoListDto dto, ToDoListDbContext dbContext)
         {
             var newList = new ToDoList
             {
-                Summary = dto.Summary
+                Summary = dto.Summary,
+                Tasks = dto.Tasks.Select(x =>                
+                    new ToDoTask
+                    {
+                        Summary = x.Summary,
+                        Complete = x.Complete
+                    }
+                ).ToList()
             };
 
-            await dbContext.ToDoLists.AddAsync(newList);
+            dbContext.ToDoLists.Add(newList);
+            dbContext.ToDoLists.Include(l => l.Tasks);
             await dbContext.SaveChangesAsync();
 
             return TypedResults.Created($"/lists/{newList.Id}", newList);
+        }
+
+        public static async Task<Results<Created<ToDoTask>, NotFound>> CreateListTask(int id, ToDoTaskDto dto, ToDoListDbContext dbContext)
+        {
+            var list = (await dbContext.ToDoLists.Include(list => list.Tasks).ToListAsync()).FirstOrDefault(x => x.Id == id);
+
+            if (list == null)
+            {
+                return TypedResults.NotFound();
+            }
+
+            var newTask = new ToDoTask
+            {
+                Summary = dto.Summary,
+                Complete = dto.Complete
+            };
+
+            list.Tasks.Add(newTask);
+
+            await dbContext.SaveChangesAsync();
+
+            return TypedResults.Created($"/lists/{id}/tasks/{newTask.Id}", newTask);
         }
 
         public static async Task<Results<NoContent, NotFound>> DeleteList(int id, ToDoListDbContext dbContext)

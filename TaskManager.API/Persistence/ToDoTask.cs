@@ -1,9 +1,9 @@
 ﻿namespace TaskManager.API.Persistence
 {
-    public class ToDoList
+    public class ToDoTask
     {
         public int Id { get; set; }
         public string Summary { get; set; }
-        public List<ToDoTask> Tasks { get; set; } = new List<ToDoTask>();
+        public bool Complete { get; set; }
     }
 }
