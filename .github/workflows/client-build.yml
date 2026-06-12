@@ -45,17 +45,17 @@ jobs:
 
       - name: Restore API dependencies
         run: dotnet restore
-        working-directory: ${{ env.API_DIR }}
+        working-directory: ${{ github.workspace }}/${{ env.API_DIR }}
 
       - name: Build API
         run: dotnet build --no-restore --configuration Release
-        working-directory: ${{ env.API_DIR }}
+        working-directory: ${{ github.workspace }}/${{ env.API_DIR }}
 
       - name: Start API in background
         run: |
           dotnet run --no-build --configuration Release &
           echo "API_PID=$!" >> "$GITHUB_ENV"
-        working-directory: ${{ env.API_DIR }}
+        working-directory: ${{ github.workspace }}/${{ env.API_DIR }}
         env:
           ASPNETCORE_URLS: http://localhost:${{ env.API_PORT }}
           # Use the in-memory provider so no database setup is needed.
