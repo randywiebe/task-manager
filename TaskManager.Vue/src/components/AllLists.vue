@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { api, type TaskList } from '../api'
+import { api } from '../api'
+import { type TaskList } from '../models/taskList'
 
 const router = useRouter()
 const lists = ref<TaskList[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
+
+// Dialog / create state
+const showDialog = ref(false)
+const newSummary = ref('')
+const creating = ref(false)
+const validationError = computed(() => newSummary.value.length > 50 ? 'Summary must be 50 characters or fewer' : null)
 
 async function fetchLists() {
   loading.value = true
@@ -22,6 +29,32 @@ async function fetchLists() {
 
 function goToList(id: number) {
   router.push(`/lists/${id}`)
+}
+
+function openCreateDialog() {
+  newSummary.value = ''
+  showDialog.value = true
+}
+
+function closeDialog() {
+  showDialog.value = false
+  creating.value = false
+  newSummary.value = ''
+}
+
+async function confirmCreate() {
+  if (newSummary.value.length > 50) return
+  creating.value = true
+  try {
+    // Set the TaskList summary and POST to /lists
+    await api.createList(newSummary.value)
+    await fetchLists()
+    closeDialog()
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Something went wrong'
+  } finally {
+    creating.value = false
+  }
 }
 
 onMounted(fetchLists)
@@ -53,13 +86,17 @@ onMounted(fetchLists)
       <button class="retry-btn" @click="fetchLists">Try again</button>
     </div>
 
-    <!-- Empty -->
-    <div v-else-if="lists.length === 0" class="state-container" aria-live="polite">
-      <p class="state-label">No lists yet. Create one to get started.</p>
-    </div>
-
-    <!-- List -->
+    <!-- List (create entry first) -->
     <ul v-else class="lists" role="list">
+      <li class="list-item">
+        <button class="list-card" @click="openCreateDialog" type="button">
+          <span class="list-summary">+ New List</span>
+          <svg class="list-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            aria-hidden="true">
+          </svg>
+        </button>
+      </li>
       <li v-for="list in lists" :key="list.id" class="list-item">
         <button class="list-card" @click="goToList(list.id)">
           <span class="list-summary">{{ list.summary }}</span>
@@ -72,6 +109,24 @@ onMounted(fetchLists)
         </button>
       </li>
     </ul>
+
+    <!-- Create dialog -->
+    <teleport to="body">
+      <div v-if="showDialog" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="create-list-title">
+        <div class="modal">
+          <h2 id="create-list-title">Create list</h2>
+          <label class="label">
+            <input type="text" v-model="newSummary" placeholder="List name" />
+          </label>
+          <p v-if="validationError" class="validation-error">{{ validationError }}</p>
+          <div class="modal-actions">
+            <button class="btn" @click="confirmCreate" :disabled="!!validationError || creating || newSummary.trim() === ''">Ok</button>
+            <button class="btn secondary" @click="closeDialog">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </teleport>
+
   </main>
 </template>
 
@@ -241,5 +296,68 @@ onMounted(fetchLists)
 .list-card:hover .list-arrow {
   opacity: 0.9;
   transform: translateX(3px);
+}
+
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.35);
+  z-index: 1000;
+}
+
+.modal {
+  background: #fff;
+  padding: 1.25rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 420px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+
+.modal h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+}
+
+.label input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+
+.validation-error {
+  color: #c0392b;
+  margin: 0.5rem 0 0;
+  font-size: 0.875rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.btn {
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-background-soft);
+  cursor: pointer;
+}
+
+.btn.secondary {
+  background: transparent;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>
