@@ -2,8 +2,8 @@
 {
     public class ToDoListDto
     {
-        public string Summary { get; set; }
+        public string Summary { get; set; } = string.Empty;
 
-        public ToDoTaskDto[] Tasks { get; set; }
+        public List<ToDoTaskDto> Tasks { get; set; } = new List<ToDoTaskDto>();
     }
 }
