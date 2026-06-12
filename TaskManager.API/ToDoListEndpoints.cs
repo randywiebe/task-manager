@@ -31,7 +31,7 @@ namespace TaskManager.API
             group.MapPost("/{id}/tasks", CreateListTask)
                 .AddEndpointFilter(async (efiContext, next) =>
                 {
-                    var param = efiContext.GetArgument<ToDoTaskDto>(0);
+                    var param = efiContext.GetArgument<ToDoTaskDto>(1);
 
                     var validationErrors = ToDoTaskDtoValidator.IsValid(param);
 
@@ -57,7 +57,7 @@ namespace TaskManager.API
 
         public static async Task<Results<Ok<ToDoList>, NotFound>> GetList(int id, ToDoListDbContext dbContext)
         {
-            var toDoList = await dbContext.ToDoLists.FindAsync(id);
+            var toDoList = (await dbContext.ToDoLists.Include(list => list.Tasks).ToListAsync()).FirstOrDefault(x => x.Id == id);
 
             if (toDoList != null)
             {
