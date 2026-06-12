@@ -8,8 +8,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-	<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
-	<PackageReference Include="Swashbuckle.AspNetCore.SwaggerUi" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+	  <PackageReference Include="Scalar.AspNetCore" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 using TaskManager.API;
 using TaskManager.API.Persistence;
 
@@ -9,6 +10,7 @@ builder.Services.AddOpenApi();
 
 // in-memory database
 builder.Services.AddDbContext<ToDoListDbContext>(options => options.UseInMemoryDatabase("items"));
+
 
 //builder.Services.AddDbContext<ToDoListDbContext>(options =>
 //{
@@ -22,10 +24,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/openapi/v1.json", "v1");
-    });
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
