@@ -35,5 +35,6 @@ export const api = {
 
   // Tasks
   getTasks:   (listId: number)               => request<any[]>(`/lists/${listId}/tasks`),
+  createTask: (listId: number, task: unknown) => request<any>(`/lists/${listId}/tasks`, json('POST', task)),
   updateTask: (listId: number, taskId: number, body: unknown) => request<any>(`/lists/${listId}/tasks/${taskId}`, json('PUT', body)),
 }
