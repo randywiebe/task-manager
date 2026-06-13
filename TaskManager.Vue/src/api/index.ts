@@ -1,3 +1,5 @@
+import type { TaskList } from '../models/taskList'
+
 const BASE = import.meta.env.VITE_API_BASE_URL
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
@@ -12,11 +14,6 @@ function json(method: string, body: unknown): RequestInit {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   }
-}
-
-export interface TaskList {
-  id: number
-  summary: string
 }
 
 export const api = {
