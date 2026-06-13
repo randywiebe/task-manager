@@ -44,6 +44,8 @@ namespace TaskManager.API
                 });
 
             group.MapPut("/{id}", UpdateList);
+            group.MapPut("/{id}/tasks/{taskId}", UpdateTask);
+
             group.MapDelete("/{id}", DeleteList);
 
             return group;
@@ -122,6 +124,45 @@ namespace TaskManager.API
             return TypedResults.Created($"/lists/{id}/tasks/{newTask.Id}", newTask);
         }
 
+        public static async Task<Results<Ok, NotFound>> UpdateList(int id, ToDoListDto listDto, ToDoListDbContext dbContext)
+        {
+            var existingList = (await dbContext.ToDoLists.Include(list => list.Tasks).ToListAsync()).FirstOrDefault(x => x.Id == id);
+
+            if (existingList != null)
+            {
+                existingList.Summary = listDto.Summary;
+                existingList.Tasks = listDto.Tasks.Select(x => new ToDoTask { Summary = x.Summary, Complete = x.Complete }).ToList();
+
+                await dbContext.SaveChangesAsync();
+
+                return TypedResults.Ok();
+            }
+
+            return TypedResults.NotFound();
+        }
+
+        public static async Task<Results<Ok, NotFound>> UpdateTask(int id, int taskId, ToDoTaskDto taskDto, ToDoListDbContext dbContext)
+        {
+            var list = (await dbContext.ToDoLists.Include(list => list.Tasks).ToListAsync()).FirstOrDefault(x => x.Id == id);
+
+            if (list != null)
+            {
+                var task = list.Tasks.FirstOrDefault(t => t.Id == taskId);
+
+                if (task != null)
+                {
+                    task.Summary = taskDto.Summary;
+                    task.Complete = taskDto.Complete;
+                }
+
+                await dbContext.SaveChangesAsync();
+
+                return TypedResults.Ok();
+            }
+
+            return TypedResults.NotFound();
+        }
+
         public static async Task<Results<NoContent, NotFound>> DeleteList(int id, ToDoListDbContext dbContext)
         {
             var list = await dbContext.ToDoLists.FindAsync(id);
@@ -132,22 +173,6 @@ namespace TaskManager.API
                 await dbContext.SaveChangesAsync();
 
                 return TypedResults.NoContent();
-            }
-
-            return TypedResults.NotFound();
-        }
-
-        public static async Task<Results<Created<ToDoList>, NotFound>> UpdateList(ToDoList list, ToDoListDbContext dbContext)
-        {
-            var existingList = await dbContext.ToDoLists.FindAsync(list.Id);
-
-            if (existingList != null)
-            {
-                existingList.Summary = list.Summary;
-
-                await dbContext.SaveChangesAsync();
-
-                return TypedResults.Created($"/lists/{existingList.Id}", existingList);
             }
 
             return TypedResults.NotFound();
