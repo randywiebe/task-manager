@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using TaskManager.API;
-using TaskManager.API.Persistence;
+using TaskManager.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 

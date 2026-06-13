@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace TaskManager.API.Persistence
+namespace TaskManager.Persistence
 {
     public class ToDoListDbContext : DbContext
     {

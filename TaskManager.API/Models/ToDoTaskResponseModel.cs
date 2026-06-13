@@ -1,6 +1,6 @@
-﻿using TaskManager.API.Persistence;
+﻿using TaskManager.Persistence;
 
-namespace TaskManager.API
+namespace TaskManager.API.Models
 {
     public class ToDoTaskResponseModel
     {
