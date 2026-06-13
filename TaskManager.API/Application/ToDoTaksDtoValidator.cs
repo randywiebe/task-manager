@@ -1,10 +1,10 @@
 ﻿using TaskManager.Models;
 
-namespace TaskManager.API
+namespace TaskManager.Application
 {
-    public static class ToDoListDtoValidator
+    public static class ToDoTaskDtoValidator
     {
-        public static Dictionary<string, string[]> IsValid(ToDoListDto dto)
+        public static Dictionary<string, string[]> IsValid(ToDoTaskDto dto)
         {
             Dictionary<string, string[]> errors = new();
 

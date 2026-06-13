@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
-using TaskManager.API.Persistence;
+using TaskManager.Persistence;
 
 namespace TaskManager.API.Testing.Unit
 {
@@ -16,7 +16,7 @@ namespace TaskManager.API.Testing.Unit
             var result = await ToDoListEndpoints.GetList(1, context);
 
             // Assert
-            Assert.IsInstanceOfType<Results<Ok<ToDoList>, NotFound>>(result);
+            Assert.IsInstanceOfType(result.Result, typeof(NotFound));
 
             var notFoundResult = (NotFound)result.Result;
 

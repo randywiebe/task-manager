@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
-using TaskManager.API.Persistence;
+using TaskManager.API.Models;
+using TaskManager.Application;
 using TaskManager.Models;
+using TaskManager.Persistence;
 
 namespace TaskManager.API
 {
@@ -47,135 +49,227 @@ namespace TaskManager.API
             group.MapPut("/{id}/tasks/{taskId}", UpdateTask);
 
             group.MapDelete("/{id}", DeleteList);
+            group.MapDelete("/{id}/tasks/{taskId}", DeleteTask);
 
             return group;
         }
 
-        public static async Task<Ok<ToDoListSummaryResponseModel[]>> GetAllLists(ToDoListDbContext dbContext)
+        public static async Task<Results<Ok<ToDoListSummaryResponseModel[]>, InternalServerError>> GetAllLists(ToDoListDbContext dbContext)
         {
-            var toDoLists = await dbContext.ToDoLists.Select(x => new ToDoListSummaryResponseModel(x)).ToArrayAsync();
-            return TypedResults.Ok(toDoLists);
-        }
-
-        public static async Task<Results<Ok<ToDoList>, NotFound>> GetList(int id, ToDoListDbContext dbContext)
-        {
-            var toDoList = (await dbContext.ToDoLists.Include(list => list.Tasks).ToListAsync()).FirstOrDefault(x => x.Id == id);
-
-            if (toDoList != null)
+            try
             {
-                return TypedResults.Ok(toDoList);
+                var toDoLists = await dbContext.ToDoLists.Select(x => new ToDoListSummaryResponseModel(x)).ToArrayAsync();
+                return TypedResults.Ok(toDoLists);
             }
-
-            return TypedResults.NotFound();
-        }
-
-        public static async Task<Results<Ok<ToDoTaskResponseModel[]>, NotFound>> GetListTasks(int id, ToDoListDbContext dbContext)        
-        {
-            var toDoList = (await dbContext.ToDoLists.Include(list => list.Tasks).ToListAsync()).FirstOrDefault(x => x.Id == id);
-
-            if (toDoList != null)
+            catch (Exception e) when (e is ArgumentNullException || e is OperationCanceledException)
             {
-                return TypedResults.Ok(toDoList.Tasks.Select(x => new ToDoTaskResponseModel(x)).ToArray());
+                // TODO: log the error coming from ToArrayAsync
+                return TypedResults.InternalServerError();
             }
-
-            return TypedResults.NotFound();
         }
 
-        public static async Task<Created<ToDoList>> CreateList(ToDoListDto dto, ToDoListDbContext dbContext)
+        public static async Task<Results<Ok<ToDoList>, NotFound, InternalServerError>> GetList(int id, ToDoListDbContext dbContext)
         {
-            var newList = new ToDoList
+            try
             {
-                Summary = dto.Summary,
-                Tasks = dto.Tasks.Select(x =>                
-                    new ToDoTask
-                    {
-                        Summary = x.Summary,
-                        Complete = x.Complete
-                    }
-                ).ToList()
-            };
+                var toDoList = (await dbContext.ToDoLists.Include(list => list.Tasks).ToListAsync()).FirstOrDefault(x => x.Id == id);
 
-            dbContext.ToDoLists.Add(newList);
-            dbContext.ToDoLists.Include(l => l.Tasks);
-            await dbContext.SaveChangesAsync();
-
-            return TypedResults.Created($"/lists/{newList.Id}", newList);
-        }
-
-        public static async Task<Results<Created<ToDoTask>, NotFound>> CreateListTask(int id, ToDoTaskDto dto, ToDoListDbContext dbContext)
-        {
-            var list = (await dbContext.ToDoLists.Include(list => list.Tasks).ToListAsync()).FirstOrDefault(x => x.Id == id);
-
-            if (list == null)
-            {
-                return TypedResults.NotFound();
-            }
-
-            var newTask = new ToDoTask
-            {
-                Summary = dto.Summary,
-                Complete = dto.Complete
-            };
-
-            list.Tasks.Add(newTask);
-
-            await dbContext.SaveChangesAsync();
-
-            return TypedResults.Created($"/lists/{id}/tasks/{newTask.Id}", newTask);
-        }
-
-        public static async Task<Results<Ok, NotFound>> UpdateList(int id, ToDoListDto listDto, ToDoListDbContext dbContext)
-        {
-            var existingList = (await dbContext.ToDoLists.Include(list => list.Tasks).ToListAsync()).FirstOrDefault(x => x.Id == id);
-
-            if (existingList != null)
-            {
-                existingList.Summary = listDto.Summary;
-                existingList.Tasks = listDto.Tasks.Select(x => new ToDoTask { Summary = x.Summary, Complete = x.Complete }).ToList();
-
-                await dbContext.SaveChangesAsync();
-
-                return TypedResults.Ok();
-            }
-
-            return TypedResults.NotFound();
-        }
-
-        public static async Task<Results<Ok, NotFound>> UpdateTask(int id, int taskId, ToDoTaskDto taskDto, ToDoListDbContext dbContext)
-        {
-            var list = (await dbContext.ToDoLists.Include(list => list.Tasks).ToListAsync()).FirstOrDefault(x => x.Id == id);
-
-            if (list != null)
-            {
-                var task = list.Tasks.FirstOrDefault(t => t.Id == taskId);
-
-                if (task != null)
+                if (toDoList != null)
                 {
-                    task.Summary = taskDto.Summary;
-                    task.Complete = taskDto.Complete;
+                    return TypedResults.Ok(toDoList);
                 }
 
-                await dbContext.SaveChangesAsync();
-
-                return TypedResults.Ok();
+                return TypedResults.NotFound();
             }
-
-            return TypedResults.NotFound();
+            catch (Exception e) when (e is ArgumentNullException || e is OperationCanceledException)
+            {
+                // TODO: log the error coming from .Include|.ToListAsync|.FirstOrDefault
+                return TypedResults.InternalServerError();
+            }
         }
 
-        public static async Task<Results<NoContent, NotFound>> DeleteList(int id, ToDoListDbContext dbContext)
+        public static async Task<Results<Ok<ToDoTaskResponseModel[]>, NotFound, InternalServerError>> GetListTasks(int id, ToDoListDbContext dbContext)        
         {
-            var list = await dbContext.ToDoLists.FindAsync(id);
-
-            if (list != null)
+            try
             {
-                dbContext.ToDoLists.Remove(list);
+                var toDoList = (await dbContext.ToDoLists.Include(list => list.Tasks).ToListAsync()).FirstOrDefault(x => x.Id == id);
+
+                if (toDoList != null)
+                {
+                    return TypedResults.Ok(toDoList.Tasks.Select(x => new ToDoTaskResponseModel(x)).ToArray());
+                }
+
+                return TypedResults.NotFound();
+            }
+            catch (Exception e) when (e is ArgumentNullException || e is OperationCanceledException)
+            {
+                // TODO: log the error coming from .Include|.ToListAsync|.FirstOrDefault
+                return TypedResults.InternalServerError();
+            }
+        }
+
+        public static async Task<Results<Created<ToDoList>, InternalServerError>> CreateList(ToDoListDto dto, ToDoListDbContext dbContext)
+        {
+            try
+            {
+                var newList = new ToDoList
+                {
+                    Summary = dto.Summary,
+                    Tasks = dto.Tasks.Select(x =>
+                        new ToDoTask
+                        {
+                            Summary = x.Summary,
+                            Complete = x.Complete
+                        }
+                    ).ToList()
+                };
+
+                dbContext.ToDoLists.Add(newList);
+                dbContext.ToDoLists.Include(l => l.Tasks);
                 await dbContext.SaveChangesAsync();
 
-                return TypedResults.NoContent();
+                return TypedResults.Created($"/lists/{newList.Id}", newList);
             }
+            catch (Exception e) when (e is ArgumentNullException || e is DbUpdateException || e is DbUpdateConcurrencyException || e is OperationCanceledException)
+            {
+                // TODO: log the error coming from .Select|.ToList|.Include|.SaveChangesAsync
+                return TypedResults.InternalServerError();
+            }
+        }
 
-            return TypedResults.NotFound();
+        public static async Task<Results<Created<ToDoTask>, NotFound, InternalServerError>> CreateListTask(int id, ToDoTaskDto dto, ToDoListDbContext dbContext)
+        {
+            try
+            {
+                var list = (await dbContext.ToDoLists.Include(list => list.Tasks).ToListAsync()).FirstOrDefault(x => x.Id == id);
+
+                if (list == null)
+                {
+                    return TypedResults.NotFound();
+                }
+
+                var newTask = new ToDoTask
+                {
+                    Summary = dto.Summary,
+                    Complete = dto.Complete
+                };
+
+                list.Tasks.Add(newTask);
+
+                await dbContext.SaveChangesAsync();
+
+                return TypedResults.Created($"/lists/{id}/tasks/{newTask.Id}", newTask);
+            }
+            catch (Exception e) when (e is ArgumentNullException || e is DbUpdateException || e is DbUpdateConcurrencyException || e is OperationCanceledException)
+            {
+                // TODO: log the error coming from .Include|.ToListAsync|FirstOrDefault|.SaveChangesAsync
+                return TypedResults.InternalServerError();
+            }
+        }
+
+        public static async Task<Results<Ok, NotFound, InternalServerError>> UpdateList(int id, ToDoListDto listDto, ToDoListDbContext dbContext)
+        {
+            try
+            {
+                var existingList = (await dbContext.ToDoLists.Include(list => list.Tasks).ToListAsync()).FirstOrDefault(x => x.Id == id);
+
+                if (existingList != null)
+                {
+                    existingList.Summary = listDto.Summary;
+                    existingList.Tasks = listDto.Tasks.Select(x => new ToDoTask { Summary = x.Summary, Complete = x.Complete }).ToList();
+
+                    await dbContext.SaveChangesAsync();
+
+                    return TypedResults.Ok();
+                }
+
+                return TypedResults.NotFound();
+            }
+            catch (Exception e) when (e is ArgumentNullException || e is DbUpdateException || e is DbUpdateConcurrencyException || e is OperationCanceledException)
+            {
+                // TODO: log the error coming from .Include|.ToListAsync|FirstOrDefault|.Select|.ToList|.SaveChangesAsync
+                return TypedResults.InternalServerError();
+            }
+        }
+
+        public static async Task<Results<Ok, NotFound, InternalServerError>> UpdateTask(int id, int taskId, ToDoTaskDto taskDto, ToDoListDbContext dbContext)
+        {
+            try
+            {
+                var list = (await dbContext.ToDoLists.Include(list => list.Tasks).ToListAsync()).FirstOrDefault(x => x.Id == id);
+
+                if (list != null)
+                {
+                    var task = list.Tasks.FirstOrDefault(t => t.Id == taskId);
+
+                    if (task != null)
+                    {
+                        task.Summary = taskDto.Summary;
+                        task.Complete = taskDto.Complete;
+                    }
+
+                    await dbContext.SaveChangesAsync();
+
+                    return TypedResults.Ok();
+                }
+
+                return TypedResults.NotFound();
+            }
+            catch (Exception e) when (e is ArgumentNullException || e is DbUpdateException || e is DbUpdateConcurrencyException || e is OperationCanceledException)
+            {
+                // TODO: log the error coming from .Include|.ToListAsync|FirstOrDefault|.SaveChangesAsync
+                return TypedResults.InternalServerError();
+            }
+        }
+
+        public static async Task<Results<NoContent, NotFound, InternalServerError>> DeleteList(int id, ToDoListDbContext dbContext)
+        {
+            try
+            {
+                var list = (await dbContext.ToDoLists.Include(list => list.Tasks).ToListAsync()).FirstOrDefault(x => x.Id == id);
+
+                if (list != null)
+                {
+                    dbContext.ToDoLists.Remove(list);
+                    await dbContext.SaveChangesAsync();
+
+                    return TypedResults.NoContent();
+                }
+
+                return TypedResults.NotFound();
+            }
+            catch (Exception e) when (e is ArgumentNullException || e is DbUpdateException || e is DbUpdateConcurrencyException || e is OperationCanceledException)
+            {
+                // TODO: log the error coming from .Include|.ToListAsync|.FirstOrDefault|.SaveChangesAsync
+                return TypedResults.InternalServerError();
+            }
+        }
+
+        public static async Task<Results<NoContent, NotFound, InternalServerError>> DeleteTask(int id, int taskId, ToDoListDbContext dbContext)
+        {
+            try
+            {
+                var list = (await dbContext.ToDoLists.Include(list => list.Tasks).ToListAsync()).FirstOrDefault(x => x.Id == id);
+
+                if (list != null)
+                {
+                    var task = list.Tasks.FirstOrDefault(t => t.Id == taskId);
+                    if (task != null)
+                    {
+                        list.Tasks.Remove(task);
+                        await dbContext.SaveChangesAsync();
+
+                        return TypedResults.NoContent();
+                    }
+                }
+
+                return TypedResults.NotFound();
+            }
+            catch (Exception e) when (e is DbUpdateException || e is DbUpdateConcurrencyException || e is OperationCanceledException)
+            {
+                // TODO: log the error coming from .Include|.ToListAsync|.FirstOrDefault|.SaveChangesAsync
+                return TypedResults.InternalServerError();
+            }
         }
     }
 }
